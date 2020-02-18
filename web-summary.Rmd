@@ -3,6 +3,7 @@ title: "Estimation of the effective reproduction number of COVID-19 outside Chin
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 ---
 ### What is the average $R_{\text{eff}}$ outside of China?
@@ -48,11 +49,7 @@ The probability $p_0$ may be estimated from the fraction of exported cases that 
 
 where $X$ is the total number of exported cases and $Y$ is the number of exported cases without secondary transmission. Note that $X$ and $Y$ are both observed.
 
-The WHO Situation Report for 13 February 2020 reports that
-
-\begin{quote}
-As of 10am CET 13 Feb 2020, a total of 170 cases of COVID-19 who had a travel history to China have been reported outside of China. The vast majority of these (151, 89\%) do not appear to lead to further transmission of the virus, while the remaining 19 have been associated with onward transmission within 12 distinct groups of epidemiologically linked cases.
-\end{quote}
+The WHO Situation Report for 13 February 2020 reported: "As of 10am CET 13 Feb 2020, a total of 170 cases of COVID-19 who had a travel history to China have been reported outside of China. The vast majority of these (151, 89\%) do not appear to lead to further transmission of the virus, while the remaining 19 have been associated with onward transmission within 12 distinct groups of epidemiologically linked cases.""
 
 Thus, we estimate that the realized effective reproduction number outside China during the period of these reports was  $R_{\text{eff}} = \frac{170}{151} -1 = 0.1258278...$. By resampling from these observations with replacement, we estimate the uncertainty around this estimate with a confidence interval of [0.07, 0.17].
 
@@ -129,7 +126,7 @@ Putting it all together we have the equation
   R_{\text{eff}} = \frac{X+\left ( \frac{1-d_1}{d_1}\right) X}{Y - (1-{d_1d_2}) Y + X \left ( \frac{1-d_1}{d_1}\right) \left (\frac{1}{R_{\text{eff}}+1} \right )}-1.
 \end{equation}
 
-I haven't tried manipulating this formula. Presumably it is transcendental and $R_{\text{eff}}$ must be found numerically by solving for the root of $g = f - R_{\text{eff}}$.
+$R_{\text{eff}}$ may be found numerically by solving for the root of $g = f - R_{\text{eff}}$.
 
 ```{r Reff}
 g <- function(Reff, d1=1, d2=1){
