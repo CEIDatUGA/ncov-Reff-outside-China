@@ -25,7 +25,6 @@ The following is a calculation to estimate the average effective reproduction nu
 
 ### Calculation for perfect observation
 
-
 During the early phases of an $SIR$ epidemic, the increase in the number of infected cases may be approximated by a birth-death process where the birth rate is given by the transmissibility $\beta$ and the death rate is given by the recovery rate $\gamma$. It is understood from context that both $\beta$ and $\gamma$ are considered at their effective values and may be different from the natural transmissibility and recovery rates due to social distancing, quarantine, active case identification and isolation, etc.
 
 A case exported to a susceptible population may give rise to secondary infections or may be isolated before such infections occur. The probability $p_0$ that no secondary infection occurs is given by the proportional propensity $p_0=\frac{\gamma}{\beta+\gamma}$. Taking the reciprocal of each side of this equation, we have
@@ -178,4 +177,112 @@ contour(log(R), levels=0, labels = 1, add = TRUE, drawlabels = TRUE, lwd=3)
 ```
 
 
+###  Effect of superspreading
 
+It is strongly suspected that COVID-19 transmission is hetereogeneous, such that a small fraction of infections contribute disproportionately to onward transmission.
+The consequences of this heterogeneity can be investigated by modeling the secondary infection rate as negative binomial random variable.
+Using this distribution, the probability an imported case fails to transmit is
+
+\begin{equation}
+  \label{eq:ng}
+  p_0 = (1 + R_{\text{eff}}/k)^{-k},
+\end{equation}
+
+where $k$ is a \textit{dispersion parameter} describing the effect of heterogeneity.
+The model presented in the first two sections of this report is a special case where $k=1$.
+The value of $k$ for COVID-19 in the United States has not yet been estimated.
+Here, we investigate two different values for $k$.
+
+1. Following Blumberg et al. (https://www.medrxiv.org/content/10.1101/2020.02.08.20021311v1), we assume $k=0.3$, which is described as "a high degree of disease heterogeneity".
+2. Following Lloyd-Smith et al. (https://www.nature.com/articles/nature04153), we use the value $k=0.16$, which is estimated for the dispersion of SARS transmission in Singapore.
+
+For transmission following a negative binomial distrbution
+
+\begin{equation}
+  p_0 = \left( 1+\frac{R_{\text{eff}}}{k}\right)^{-k}
+\end{equation}
+
+which may be rearranged to
+
+\begin{equation}
+  R_{\text{eff}} = k \left(\frac{1}{p_0} \right)^{\frac{1}{k}} - k
+\end{equation}
+
+For transmission following a negative binomial distribution, $R_{\text{eff}}$ may be obtained from data with imperfect detection using the formula
+
+\begin{equation}
+  R_{\text{eff}} = k \left( \frac{X+\left ( \frac{1-d_1}{d_1}\right) X}{Y - (1-{d_1d_2}) Y + X \left ( \frac{1-d_1}{d_1}\right) \left (\frac{1}{(R_{\text{eff}}/k+1)^k} \right )} \right)^{\frac{1}{k}}-k.
+\end{equation}
+
+
+```{r Reff-nb}
+g.nb <- function(Reff, d1=1, d2=1, k=0.3){
+  X <- 170
+  Y <- 151
+  U1 <- X*(1-d1)/d1 
+  U2 <- Y*(1-d1*d2)
+  U3 <- U1*(1/((Reff/k+1)^k))
+  g <- k*((X+U1)/(Y-U2+U3))^(1/k) - k - Reff
+  return(g)
+}
+```
+
+```{r get-root-nb}
+get.root.nb <- function(d1, d2, k=1){
+  out <- tryCatch(uniroot(g.nb, c(0.0001,50), d1, d2, k)$root, error=function(x) 0)
+  return(out)
+}
+```
+
+```{r heatmap-negBin03}
+d1 <- seq(0.0, 1, length=500)
+d2 <- seq(0.0, 1, length=500)
+
+R <- array(dim=c(length(d2), length(d1)))
+for(i in 1:length(d1)){
+  for(j in 1:length(d2)){
+    R[j,i] <- get.root.nb(d1[i],d2[j],k=0.3)
+  }
+}
+
+image(log(R), ylab='Detection rate among exported cases (d1)',
+      xlab='Reduction of detection among contacts of exported cases (d2)',
+      main='Effective reproduction number under imperfect detection (k=0.3)',
+      axes=FALSE)
+axis(2, at=seq(0,1, length=11), labels=seq(0.0, 1, length=11), las=2)
+axis(1, at=seq(0,1, length=11), labels=seq(0.0, 1, length=11), las=1)
+box()
+lev <- c(-2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3, 3.5)
+contour(log(R), levels=lev, labels=round(exp(lev),1), add = TRUE, drawlabels = TRUE)
+contour(log(R), levels=0, labels = 1, add = TRUE, drawlabels = TRUE, lwd=3)
+```
+
+```{r heatmap-negBin016}
+d1 <- seq(0.0, 1, length=500)
+d2 <- seq(0.0, 1, length=500)
+
+R <- array(dim=c(length(d2), length(d1)))
+for(i in 1:length(d1)){
+  for(j in 1:length(d2)){
+    R[j,i] <- get.root.nb(d1[i],d2[j],k=0.16)
+  }
+}
+
+image(log(R), ylab='Detection rate among exported cases (d1)',
+      xlab='Reduction of detection among contacts of exported cases (d2)',
+      main='Effective reproduction number under imperfect detection (k=0.16)',
+      axes=FALSE)
+axis(2, at=seq(0,1, length=11), labels=seq(0.0, 1, length=11), las=2)
+axis(1, at=seq(0,1, length=11), labels=seq(0.0, 1, length=11), las=1)
+box()
+lev <- c(-2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3, 3.5)
+contour(log(R), levels=lev, labels=round(exp(lev),1), add = TRUE, drawlabels = TRUE)
+contour(log(R), levels=0, labels = 1, add = TRUE, drawlabels = TRUE, lwd=3)
+```
+
+Clearly, heterogeneity in transmission is important to the determination of $R_{\text{eff}}$ and as the rate of detection goes down (smaller $d_1$ and $d_2$) estimates of $R_{\text{eff}}$ are increasingly biased.
+Our estimator suggests that if detection is perfect ($d_1=d_2=1$) then current data imply $R_{\text{eff}}$ to be no larger than 0.018 (for $k=0.16$) and more likely between  0.013 (for $k=1$) and 0.016 (for $k=0.3$).
+The range of detection rates consistent with subcritical transmission is certainly smaller for $k=0.03$ than for the baseline of $k=1$.
+Although it seems unlikely, it is possible that $k$ is as small as 0.16, in which case almost no error in detection may be tolerated.
+Taken together, these findings suggest that the estimation of $k$ is crucial to the estimation of $R_{\text{eff}}$ outside of China.
+Importantly, determining $k$ with any degree of precision requires good case identification, effective contact tracing, and persistent follow up to acurately characterize individual chains of transmission.
