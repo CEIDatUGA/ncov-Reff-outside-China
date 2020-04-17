@@ -1,9 +1,9 @@
 ---
 title: "Estimation of the effective reproduction number of COVID-19 outside China"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 ---
 ### What is the average $R_{\text{eff}}$ outside of China?
@@ -144,7 +144,7 @@ Here we test the function assuming perfect observation by setting $d_1 = 1$ and 
 print(solution <- uniroot(g, c(0.0001,500), d1=1, d2=1))
 ```
 
-Now, we solve over a range of $d_1$ and $d_2$. Clearly, the failure to detect exported cases or cases among contacts of exported cases yields a biased estimate of $R_{\text{eff}}$. The heavy solid line indicates the critical boundary at $R_{\text{eff}}=0$. Given that there have not been a singificant number of cases identified without a plausible exposure scenario (e.g. travel history to China or exposure to a known case), it seems reasonable to assume that $d_1$ is relatively close to 1. It is hoped that $d_2$ has also remained close to 1, for instance through effective contract tracing. Assuming $d_1=d_2=0.9$, this estimator yields an average $R_{\text{eff}}$ outside of China of 0.39.
+Now, we solve over a range of $d_1$ and $d_2$. Clearly, the failure to detect exported cases or cases among contacts of exported cases yields a biased estimate of $R_{\text{eff}}$. The heavy solid line indicates the critical boundary at $R_{\text{eff}}=0$. Given that there have not been a significant number of cases identified without a plausible exposure scenario (e.g. travel history to China or exposure to a known case), it seems reasonable to assume that $d_1$ is relatively close to 1. It is hoped that $d_2$ has also remained close to 1, for instance through effective contract tracing. Assuming $d_1=d_2=0.9$, this estimator yields an average $R_{\text{eff}}$ outside of China of 0.39.
 
 ```{r heatmap}
 get.root <- function(d1, d2){
